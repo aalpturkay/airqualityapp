@@ -21,7 +21,6 @@ public class AirPollutionApiHelper {
 
         RestTemplate restTemplate = new RestTemplate();
 
-
         ResponseEntity<AirPollutionServiceResponseDto> responseEntity = restTemplate.
                 getForEntity(URL + "?lat={lat}&lon={lon}&start={start}&end={end}&appid={appid}",
                         AirPollutionServiceResponseDto.class, lat, lon, unixStartDate, unixEndDate, APP_ID);
