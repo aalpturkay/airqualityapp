@@ -7,6 +7,7 @@ import com.alpturkay.airqualityapp.cty.entity.CtyCity;
 import com.alpturkay.airqualityapp.cty.helper.GeocodingApiHelper;
 import com.alpturkay.airqualityapp.gen.enums.GenErrorMessage;
 import com.alpturkay.airqualityapp.gen.exceptions.ItemDuplicateException;
+import com.alpturkay.airqualityapp.gen.utils.CustomStringUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -28,7 +29,7 @@ public class CtyCityService {
     public CtyCity save(CtyCitySaveRequestDto ctyCitySaveRequestDto){
 
         String cityName = ctyCitySaveRequestDto.getCityName();
-        cityName = StringUtils.capitalize(cityName.toLowerCase());
+        cityName = CustomStringUtil.lowerAndCapitalizeFirstLetter(cityName);
 
         boolean existsByCityName = existsByCityName(cityName);
 
@@ -49,7 +50,7 @@ public class CtyCityService {
     }
 
     public void getAirQualityData(){
-        aqtAirQualityService.getAirQualityData("Ankara", "20-06-2022", "22-06-2022");
+        //aqtAirQualityService.getAirQualityData("Ankara", "20-06-2022", "22-06-2022");
     }
 
     public boolean existsByCityName(String cityName) {
