@@ -1,5 +1,6 @@
 package com.alpturkay.airqualityapp.aqt.entity;
 
+import com.alpturkay.airqualityapp.cty.entity.CtyCity;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,8 +16,7 @@ public class AqtAirQuality {
     @GeneratedValue(generator = "AqtAirQuality")
     private Long id;
 
-    @Column(name = "CITY")
-    private String city;
-
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ID_CTY_CITY")
+    private CtyCity ctyCity;
 }
