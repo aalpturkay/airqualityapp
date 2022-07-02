@@ -4,7 +4,9 @@ import com.alpturkay.airqualityapp.aqt.entity.AqtAirQualityResult;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface AqtAirQualityResultDao extends JpaRepository<AqtAirQualityResult, Long> {
-    List<AqtAirQualityResult> findByDateAndAqtAirQuality(String date, Long aqtAirQuality);
+    AqtAirQualityResult findByDateAndAqtAirQuality(String date, Long aqtAirQuality);
+    //boolean existsByDateAndAirQuality(String date, Long aqtAirQuality);
 }
