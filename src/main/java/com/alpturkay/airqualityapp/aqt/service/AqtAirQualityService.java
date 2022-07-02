@@ -4,6 +4,9 @@ package com.alpturkay.airqualityapp.aqt.service;
 import com.alpturkay.airqualityapp.aqt.dao.AqtAirQualityDao;
 import com.alpturkay.airqualityapp.aqt.dao.AqtAirQualityResultDao;
 import com.alpturkay.airqualityapp.aqt.dto.AirPollutionServiceResponseDto;
+import com.alpturkay.airqualityapp.aqt.dto.AirPollutionServiceResponseListItemComponentsDto;
+import com.alpturkay.airqualityapp.aqt.dto.AirPollutionServiceResponseListItemDto;
+import com.alpturkay.airqualityapp.aqt.entity.AqtAirQuality;
 import com.alpturkay.airqualityapp.aqt.entity.AqtAirQualityResult;
 import com.alpturkay.airqualityapp.aqt.helper.AirPollutionApiHelper;
 import com.alpturkay.airqualityapp.cty.entity.CtyCity;
@@ -15,9 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -45,11 +48,13 @@ public class AqtAirQualityService {
         Date end;
         Calendar startCal = Calendar.getInstance();
         Calendar endCal = Calendar.getInstance();
+        final int DAY = 24;
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
 
         List<AirPollutionServiceResponseDto> airPollutionList = new ArrayList<>();
+        Queue<List<AirPollutionServiceResponseListItemComponentsDto>> pollutants = new LinkedList<>();
 
         try {
             start = dateFormat.parse(startDate);
@@ -62,16 +67,47 @@ public class AqtAirQualityService {
         endCal.setTime(end);
         endCal.add(Calendar.DATE, 1);
 
-        AirPollutionServiceResponseDto airPollutionData = airPollutionApiHelper.getAirPollutionData(allowedCity.getLat(), allowedCity.getLon(),
+        /*
+        AirPollutionServiceResponseDto airPollutionData = airPollutionApiHelper.
+                getAirPollutionData(allowedCity.getLat(), allowedCity.getLon(),
                 CustomDateUtil.convertDateToUnixTimeStamp(startCal.getTime()),
                 CustomDateUtil.convertDateToUnixTimeStamp(endCal.getTime())
         );
         log.info("List Size: {}", airPollutionData.getList().size());
+         */
         // Classify air quality (Good etc.)
+        if (aqtAirQualityDao.existsByCtyCity(allowedCity)){
+            for (Date date = startCal.getTime(); startCal.before(endCal); startCal.add(Calendar.DATE, 1), date = startCal.getTime()) {
 
-        // Todo: Add null check
-        List<AqtAirQualityResult> aqtAirQualityResults = aqtAirQualityResultDao.
-                findByDateAndAqtAirQuality(startDate, aqtAirQualityDao.findByCity(cityName).getId());
+                aqtAirQualityResultDao.findByDateAndAqtAirQuality(dateFormat.format(date), 1L);
+            }
+        } else {
+            Long startUnixTimeStamp = CustomDateUtil.convertDateToUnixTimeStamp(startCal.getTime());
+            Long endUnixTimeStamp = CustomDateUtil.convertDateToUnixTimeStamp(endCal.getTime());
+            BigDecimal sumOfCO = new BigDecimal(0);
+            BigDecimal meanOfCO;
+            AirPollutionServiceResponseDto airPollutionData = airPollutionApiHelper.getAirPollutionData(allowedCity.getLat(), allowedCity.getLon(),
+                    startUnixTimeStamp, endUnixTimeStamp);
+            for (int i = 0; i < airPollutionData.getList().size() / DAY; i++) {
+                List<AirPollutionServiceResponseListItemDto> subList = airPollutionData.getList().subList(i * DAY, (i + 1) * DAY);
+                //subList.stream().map(data -> data.getComponents()).reduce(0, (integer, airPollutionServiceResponseListItemComponentsDto) -> integer.getCo().add());
+
+            }
+            airPollutionList.add(airPollutionData);
+        }
+
+
+
+        // If the query is in the DB
+        /*
+        if (aqtAirQualityDao.existsByCity(cityName)){
+            AqtAirQuality aqtAirQuality = aqtAirQualityDao.findByCity(cityName);
+            Long aqtAirQualityId = aqtAirQuality.getId();
+            //List<AqtAirQualityResult> airQualityResultList = aqtAirQualityResultDao.findByDateAndAqtAirQuality(dateFormat.format(start), aqtAirQualityId);
+        } else {
+           log.info("Data will request from the api");
+        }
+         */
 
 
         /*
