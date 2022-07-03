@@ -12,4 +12,5 @@ public class AqtAirQualityResponseDto {
 
     @JsonProperty("Results")
     private List<AqtAirQualityResultDto> results;
+
 }
