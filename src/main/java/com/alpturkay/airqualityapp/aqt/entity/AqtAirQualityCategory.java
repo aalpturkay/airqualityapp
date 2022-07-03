@@ -17,8 +17,16 @@ public class AqtAirQualityCategory {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "POLLUTANT")
-    private EnumAqtAirQualityCategoryType pollutant;
+    @Column(name = "CATEGORY_CO")
+    private EnumAqtAirQualityCategoryType categoryCO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "CATEGORY_SO2")
+    private EnumAqtAirQualityCategoryType categorySO2;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "CATEGORY_O3")
+    private EnumAqtAirQualityCategoryType categoryO3;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ID_AQT_AIR_QUALITY_RESULT")
