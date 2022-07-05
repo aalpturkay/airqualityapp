@@ -63,8 +63,38 @@ public class AqtAirQualityService {
 
         // Classify air quality (Good etc.)
         if (aqtAirQualityDao.existsByCtyCity(allowedCity)){
+            List<String> dates = new ArrayList<>();
+            List<String> datesInDB = new ArrayList<>();
+            List<String> datesNotInDB = new ArrayList<>();
+            Date myDate;
+
+            for (Date date = startCal.getTime(); startCal.before(endCal); startCal.add(Calendar.DATE, 1), date = startCal.getTime())
+                dates.add(dateFormat.format(date));
+
+            // 15, 16, 17, 18, 19
+            int i = 0;
+            while (i < dates.size()) {
+                boolean isInDB = aqtAirQualityDao.findByCtyCityAndDate(allowedCity, dates.get(i)).isPresent();
+                if (isInDB){
+                    datesInDB.add(dates.get(i));
+                    if (dates.size() - 1 == i){
+                        log.info("{} - {} arası DB'den", datesInDB.get(0), datesInDB.get(datesInDB.size() - 1));
+                    }
+                    else if (aqtAirQualityDao.findByCtyCityAndDate(allowedCity, dates.get(i+1)).isEmpty())
+                        log.info("{} - {} arası DB'den", datesInDB.get(0), datesInDB.get(datesInDB.size() - 1));
+                }else{
+                    datesNotInDB.add(dates.get(i));
+                    if (dates.size() - 1 == i){
+                        log.info("{} - {} arası API'den", datesInDB.get(0), datesInDB.get(datesInDB.size() - 1));
+                    }
+                    else if (aqtAirQualityDao.findByCtyCityAndDate(allowedCity, dates.get(i+1)).isPresent())
+                        log.info("{} - {} arası API'den", datesNotInDB.get(0), datesNotInDB.get(datesNotInDB.size() - 1));
+                }
+                i++;
+            }
 
 
+            /*
             for (Date date = startCal.getTime(); startCal.before(endCal); startCal.add(Calendar.DATE, 1), date = startCal.getTime()) {
                 List<String> datesInDB = new ArrayList<>();
                 List<String> datesNotInDB = new ArrayList<>();
@@ -79,10 +109,8 @@ public class AqtAirQualityService {
 
                 if (!datesNotInDB.isEmpty())
                     log.info("{}, {} ile {} -> API'den alınacak.", allowedCity.getCityName(), datesNotInDB.get(0), datesNotInDB.get(datesInDB.size() - 1));
-
-
             }
-
+             */
 
         } else {
             Long startUnixTimeStamp = CustomDateUtil.convertDateToUnixTimeStamp(startCal.getTime());
