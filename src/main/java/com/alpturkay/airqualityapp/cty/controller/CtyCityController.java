@@ -1,7 +1,7 @@
 package com.alpturkay.airqualityapp.cty.controller;
 
+import com.alpturkay.airqualityapp.cty.dto.CtyCityDto;
 import com.alpturkay.airqualityapp.cty.dto.CtyCitySaveRequestDto;
-import com.alpturkay.airqualityapp.cty.entity.CtyCity;
 import com.alpturkay.airqualityapp.cty.service.CtyCityService;
 import com.alpturkay.airqualityapp.gen.response.RestResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,12 +16,7 @@ public class CtyCityController {
     private final CtyCityService ctyCityService;
 
     @PostMapping
-    public RestResponse<ResponseEntity<CtyCity>> save(@RequestBody CtyCitySaveRequestDto ctyCitySaveRequestDto){
+    public RestResponse<ResponseEntity<CtyCityDto>> save(@RequestBody CtyCitySaveRequestDto ctyCitySaveRequestDto){
         return RestResponse.of(ResponseEntity.status(HttpStatus.CREATED).body(ctyCityService.save(ctyCitySaveRequestDto)));
-    }
-
-    @GetMapping
-    public void getAirQualityData(){
-        ctyCityService.getAirQualityData();
     }
 }
