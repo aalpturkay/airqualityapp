@@ -28,12 +28,12 @@ public class AqtAirQualityService {
 
     private final AirPollutionApiHelper airPollutionApiHelper;
     private final AirPollutionMathHelper airPollutionMathHelper;
-    private final CtyCityService ctyCityService;
     private final AqtAirQualityDao aqtAirQualityDao;
-    private final AqtAirQualityConverter aqtAirQualityConverter;
+    private final CtyCityService ctyCityService;
     private final AQIClassifier aqiClassifier;
+    private final AqtAirQualityConverter aqtAirQualityConverter;
 
-    public AqtAirQualityResponseDto getAirQualityData(String cityName, Optional<String> startDateOptional, Optional<String> endDateOptional){
+    public AqtAirQualityResponseDto getAirQuality(String cityName, Optional<String> startDateOptional, Optional<String> endDateOptional){
 
         CtyCity allowedCity = getAllowedCityWithControl(cityName);
 
@@ -59,12 +59,8 @@ public class AqtAirQualityService {
         endDateOptional.ifPresentOrElse(endDate::set, () ->
                 endDate.set(dateFormat.format(startCal.getTime())));
 
-        try {
-            start = dateFormat.parse(startDate.get());
-            end = dateFormat.parse(endDate.get());
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
+        start = CustomDateUtil.parseStringToDate(startDate.get(), dateFormat);
+        end = CustomDateUtil.parseStringToDate(endDate.get(), dateFormat);
 
         startCal.setTime(start);
         endCal.setTime(end);
@@ -75,7 +71,6 @@ public class AqtAirQualityService {
             List<String> dates = new ArrayList<>();
             List<String> datesInDB = new ArrayList<>();
             List<String> datesNotInDB = new ArrayList<>();
-            Date myDate;
 
             for (Date date = startCal.getTime(); startCal.before(endCal); startCal.add(Calendar.DATE, 1), date = startCal.getTime())
                 dates.add(dateFormat.format(date));
@@ -129,13 +124,9 @@ public class AqtAirQualityService {
         Calendar endCal = Calendar.getInstance();
         Date start, end;
 
-        try {
-            start = dateFormat.parse(startDate);
-            end = dateFormat.parse(endDate);
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-
+        start = CustomDateUtil.parseStringToDate(startDate, dateFormat);
+        end = CustomDateUtil.parseStringToDate(endDate, dateFormat);
+        
         startCal.setTime(start);
         endCal.setTime(end);
         endCal.add(Calendar.DATE, 1);
@@ -179,41 +170,6 @@ public class AqtAirQualityService {
         }
     }
 
-    private void saveAirQualityAndSetResultDtoOld(CtyCity allowedCity, List<AqtAirQualityResultDto> aqtAirQualityResultDtoList, int DAY, Calendar startCal, Calendar endCal, SimpleDateFormat dateFormat, AirPollutionServiceResponseDto airPollutionData) {
-        int i = 0;
-        for (Date date = startCal.getTime(); startCal.before(endCal); startCal.add(Calendar.DATE, 1), date = startCal.getTime()) {
-            BigDecimal sumOfSO2 = new BigDecimal(0);
-            BigDecimal sumOfO3 = new BigDecimal(0);
-            BigDecimal sumOfCO = new BigDecimal(0);
-
-            List<AirPollutionServiceResponseListItemDto> subList = airPollutionData.getList().subList(i * DAY, (i + 1) * DAY);
-
-            Pollutant averagesOfPollutants = airPollutionMathHelper.
-                    getAveragesOfPollutants(subList, new Pollutant(sumOfCO, sumOfSO2, sumOfO3), DAY);
-
-            EnumAqtAirQualityCategoryType categorySO2 = aqiClassifier.classify(new AQIValues(40, 80,
-                    380, 800, 1600, 1600), averagesOfPollutants.getSo2());
-            EnumAqtAirQualityCategoryType categoryCO = aqiClassifier.classify(new AQIValues(50, 100,
-                    150, 200, 300, 300), averagesOfPollutants.getCo());
-            EnumAqtAirQualityCategoryType categoryO3 = aqiClassifier.classify(new AQIValues(50, 100,
-                    168, 208, 748, 748), averagesOfPollutants.getO3());
-
-            // save to the db
-            AqtAirQuality aqtAirQuality = aqtAirQualityConverter.convertToAqtAirQuality(allowedCity, dateFormat.format(date),
-                    categoryCO, categorySO2, categoryO3);
-
-            aqtAirQuality = aqtAirQualityDao.save(aqtAirQuality);
-
-            // Dto converting
-            AqtAirQualityResultDto aqtAirQualityResultDto = aqtAirQualityConverter.
-                    convertToAqtAirQualityResultDto(aqtAirQuality);
-
-            aqtAirQualityResultDtoList.add(aqtAirQualityResultDto);
-
-            i++;
-        }
-    }
-    
     // Todo: make this exception custom.
     private CtyCity getAllowedCityWithControl(String cityName) {
         cityName = CustomStringUtil.lowerAndCapitalizeFirstLetter(cityName);
