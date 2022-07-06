@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface AqtAirQualityDao extends JpaRepository<AqtAirQuality, Long> {
     AqtAirQuality findByCtyCity(Long city);
-    Optional<AqtAirQuality> findByCtyCityAndDate(CtyCity city, String date);
+    AqtAirQuality findByCtyCityAndDate(CtyCity city, String date);
+    boolean existsByCtyCityAndDate(CtyCity city, String date);
     boolean existsByCtyCity(CtyCity city);
 }
