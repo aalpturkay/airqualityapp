@@ -1,6 +1,7 @@
 package com.alpturkay.airqualityapp.cty.service;
 
-import com.alpturkay.airqualityapp.aqt.service.AqtAirQualityService;
+import com.alpturkay.airqualityapp.cty.converter.CtyCityConverter;
+import com.alpturkay.airqualityapp.cty.dto.CtyCityDto;
 import com.alpturkay.airqualityapp.cty.dto.CtyCitySaveRequestDto;
 import com.alpturkay.airqualityapp.cty.dto.GeocodingServiceResponseDto;
 import com.alpturkay.airqualityapp.cty.entity.CtyCity;
@@ -9,24 +10,16 @@ import com.alpturkay.airqualityapp.gen.enums.GenErrorMessage;
 import com.alpturkay.airqualityapp.gen.exceptions.ItemDuplicateException;
 import com.alpturkay.airqualityapp.gen.utils.CustomStringUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
 public class CtyCityService {
     private final CtyCityEntityService ctyCityEntityService;
     private final GeocodingApiHelper geocodingApiHelper;
-    private AqtAirQualityService aqtAirQualityService;
+    private final CtyCityConverter ctyCityConverter;
 
-    @Autowired
-    public void setAqtAirQualityService(@Lazy AqtAirQualityService aqtAirQualityService){
-        this.aqtAirQualityService = aqtAirQualityService;
-    }
-
-    public CtyCity save(CtyCitySaveRequestDto ctyCitySaveRequestDto){
+    public CtyCityDto save(CtyCitySaveRequestDto ctyCitySaveRequestDto){
 
         String cityName = ctyCitySaveRequestDto.getCityName();
         cityName = CustomStringUtil.lowerAndCapitalizeFirstLetter(cityName);
@@ -37,20 +30,16 @@ public class CtyCityService {
             throw new ItemDuplicateException(GenErrorMessage.ITEM_ALREADY_EXISTS);
         }
 
-        GeocodingServiceResponseDto location = geocodingApiHelper.getLocationByCityName(cityName);
+        GeocodingServiceResponseDto geocodingServiceResponseDto = geocodingApiHelper.getLocationByCityName(cityName);
 
-        CtyCity ctyCity = new CtyCity();
-
-        ctyCity.setCityName(cityName);
-        ctyCity.setLat(location.getLat());
-        ctyCity.setLon(location.getLon());
+        CtyCity ctyCity = ctyCityConverter.convertToCtyCity(cityName, geocodingServiceResponseDto);
 
 
-        return ctyCityEntityService.save(ctyCity);
-    }
 
-    public void getAirQualityData(){
-        //aqtAirQualityService.getAirQualityData("Ankara", "20-06-2022", "22-06-2022");
+        ctyCity = ctyCityEntityService.save(ctyCity);
+
+        CtyCityDto ctyCityDto = ctyCityConverter.convertToCtyCityDto(ctyCity);
+        return ctyCityDto;
     }
 
     public boolean existsByCityName(String cityName) {
