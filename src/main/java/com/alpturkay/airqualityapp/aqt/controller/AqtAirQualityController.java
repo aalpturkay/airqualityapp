@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/air_quality")
@@ -25,8 +26,8 @@ public class AqtAirQualityController {
 
     @GetMapping
     public ResponseEntity<AqtAirQualityResponseDto> getAirQuality(@RequestParam String city,
-                                                                  @RequestParam("startDate") @DateTimeFormat(pattern = "dd-MM-yyyy") String startDate,
-                                                                  @RequestParam("endDate") @DateTimeFormat(pattern = "dd-MM-yyyy") String endDate){
+                                                                  @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") Optional<String> startDate,
+                                                                  @RequestParam(required = false) @DateTimeFormat(pattern = "dd-MM-yyyy") Optional<String> endDate){
 
         return ResponseEntity.ok(aqtAirQualityService.getAirQualityData(city, startDate, endDate));
     }
