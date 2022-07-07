@@ -19,9 +19,9 @@ You can only query dates from 27-11-2020 to today.
 ## API Routes
 
 ### Get Air Quality
-#### Route and Swagger UI:
-- /air_quality?city=city&startDate=dd-MM-yyyy&endDate=dd-MM-yyyy
-  ![getairqualityankara](https://user-images.githubusercontent.com/44681322/177865254-fcef0425-6116-4781-8088-21f54c0d1bd5.png)
+/air_quality?city=city&startDate=dd-MM-yyyy&endDate=dd-MM-yyyy
+
+![getairqualityankara](https://user-images.githubusercontent.com/44681322/177865254-fcef0425-6116-4781-8088-21f54c0d1bd5.png)
 
 ![ankaraairqualityresult](https://user-images.githubusercontent.com/44681322/177865607-1d25bf6c-171e-48c2-af01-cd9353cd5611.png)
 
