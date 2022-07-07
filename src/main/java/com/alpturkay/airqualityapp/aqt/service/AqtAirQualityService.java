@@ -36,6 +36,7 @@ public class AqtAirQualityService {
     public AqtAirQualityResponseDto getAirQuality(String cityName, Optional<String> startDateOptional, Optional<String> endDateOptional){
 
         CtyCity allowedCity = getAllowedCityWithControl(cityName);
+        cityName = allowedCity.getCityName();
 
         AqtAirQualityResponseDto aqtAirQualityResponseDto = new AqtAirQualityResponseDto();
         List<AqtAirQualityResultDto> aqtAirQualityResultDtoList = new ArrayList<>();
@@ -58,6 +59,9 @@ public class AqtAirQualityService {
 
         endDateOptional.ifPresentOrElse(endDate::set, () ->
                 endDate.set(dateFormat.format(startCal.getTime())));
+
+        controlDatesBetweenValidDates(startDate.get(), CustomDateUtil.MIN_QUERYABLE_DATE, dateFormat);
+        controlDatesBetweenValidDates(endDate.get(), CustomDateUtil.MIN_QUERYABLE_DATE, dateFormat);
 
         start = CustomDateUtil.parseStringToDate(startDate.get(), dateFormat);
         end = CustomDateUtil.parseStringToDate(endDate.get(), dateFormat);
@@ -88,22 +92,25 @@ public class AqtAirQualityService {
 
                     datesInDB.add(dates.get(i));
                     if (datesSize - 1 == i){
-                        log.info("{} arası DB'den", datesInDB.get(datesInDB.size() - 1));
+                        log.info("{}, {} - {}  DB'den alınacak.", cityName, datesInDB.get(0),datesInDB.get(datesInDB.size() - 1));
+                        datesInDB.clear();
                     }
-                    else if (!aqtAirQualityDao.existsByCtyCityAndDate(allowedCity, dates.get(i+1)))
-                        log.info("{} - {} arası DB'den", datesInDB.get(0), datesInDB.get(datesInDB.size() - 1));
+                    else if (!aqtAirQualityDao.existsByCtyCityAndDate(allowedCity, dates.get(i+1))) {
+                        log.info("{}, {} - {} DB'den alınacak.", cityName, datesInDB.get(0), datesInDB.get(datesInDB.size() - 1));
+                        datesInDB.clear();
+                    }
                 }else{
                     datesNotInDB.add(dates.get(i));
                     if (datesSize - 1 == i){
                         saveAirQualityAndSetResultDto(allowedCity, aqtAirQualityResultDtoList, DAY,
-                                datesNotInDB.get(datesNotInDB.size() - 1), datesNotInDB.get(datesNotInDB.size() - 1), dateFormat);
-                        log.info("{} API'den", datesNotInDB.get(datesNotInDB.size() - 1));
+                                datesNotInDB.get(0), datesNotInDB.get(datesNotInDB.size() - 1), dateFormat);
+                        log.info("{}, {} - {} API'den alınacak ve DB'ye kaydedilecek.", cityName, datesNotInDB.get(0), datesNotInDB.get(datesNotInDB.size() - 1));
                         datesNotInDB.clear();
                     }
                     else if (aqtAirQualityDao.existsByCtyCityAndDate(allowedCity, dates.get(i+1))) {
                         saveAirQualityAndSetResultDto(allowedCity, aqtAirQualityResultDtoList, DAY,
                                 datesNotInDB.get(0), datesNotInDB.get(datesNotInDB.size() - 1), dateFormat);
-                        log.info("{} - {} arası API'den", datesNotInDB.get(0), datesNotInDB.get(datesNotInDB.size() - 1));
+                        log.info("{}, {} - {} API'den alınacak ve DB'ye kaydedilecek.", cityName, datesNotInDB.get(0), datesNotInDB.get(datesNotInDB.size() - 1));
                         datesNotInDB.clear();
                     }
                 }
@@ -126,7 +133,7 @@ public class AqtAirQualityService {
 
         start = CustomDateUtil.parseStringToDate(startDate, dateFormat);
         end = CustomDateUtil.parseStringToDate(endDate, dateFormat);
-        
+
         startCal.setTime(start);
         endCal.setTime(end);
         endCal.add(Calendar.DATE, 1);
@@ -179,6 +186,10 @@ public class AqtAirQualityService {
         return ctyCityService.findByCityName(cityName);
     }
 
-
+    private void controlDatesBetweenValidDates(String date, String minDate, SimpleDateFormat dateFormat){
+        if(CustomDateUtil.isBetweenMinDateAndToday(date, minDate, dateFormat))
+            return;
+        throw new RuntimeException("Dates must be between 27-11-2020 and today!");
+    }
 
 }
