@@ -14,6 +14,8 @@ import com.alpturkay.airqualityapp.gen.exceptions.CityNotAllowedException;
 import com.alpturkay.airqualityapp.gen.exceptions.DateNotValidException;
 import com.alpturkay.airqualityapp.gen.utils.CustomDateUtil;
 import com.alpturkay.airqualityapp.gen.utils.CustomStringUtil;
+import com.alpturkay.airqualityapp.rbt.LogData;
+import com.alpturkay.airqualityapp.rbt.RabbitMQLogProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class AqtAirQualityService {
     private final CtyCityService ctyCityService;
     private final AQIClassifier aqiClassifier;
     private final AqtAirQualityConverter aqtAirQualityConverter;
+    private final RabbitMQLogProducer rabbitMQLogProducer;
 
     public AqtAirQualityResponseDto getAirQuality(String cityName, Optional<String> startDateOptional, Optional<String> endDateOptional){
 
@@ -85,6 +88,7 @@ public class AqtAirQualityService {
 
             // 15, 16, 17, 18, 19
             int datesSize = dates.size();
+            String logMessage = "";
             int i = 0;
             while (i < dates.size()) {
                 boolean isInDB = aqtAirQualityDao.existsByCtyCityAndDate(allowedCity, dates.get(i));
@@ -97,10 +101,14 @@ public class AqtAirQualityService {
                     datesInDB.add(dates.get(i));
                     if (datesSize - 1 == i){
                         log.info("{}, {} - {}  DB'den alınacak.", cityName, datesInDB.get(0),datesInDB.get(datesInDB.size() - 1));
+                        logMessage = cityName+" "+datesInDB.get(0)+" - " + datesInDB.get(datesInDB.size() - 1)+"DB'den alınacak.";
+                        rabbitMQLogProducer.produce(new LogData(logMessage, new Date()));
                         datesInDB.clear();
                     }
                     else if (!aqtAirQualityDao.existsByCtyCityAndDate(allowedCity, dates.get(i+1))) {
                         log.info("{}, {} - {} DB'den alınacak.", cityName, datesInDB.get(0), datesInDB.get(datesInDB.size() - 1));
+                        logMessage = cityName+" "+datesInDB.get(0)+" - " + datesInDB.get(datesInDB.size() - 1)+"DB'den alınacak.";
+                        rabbitMQLogProducer.produce(new LogData(logMessage, new Date()));
                         datesInDB.clear();
                     }
                 }else{
@@ -109,19 +117,25 @@ public class AqtAirQualityService {
                         saveAirQualityAndSetResultDto(allowedCity, aqtAirQualityResultDtoList, DAY,
                                 datesNotInDB.get(0), datesNotInDB.get(datesNotInDB.size() - 1), dateFormat);
                         log.info("{}, {} - {} API'den alınacak ve DB'ye kaydedilecek.", cityName, datesNotInDB.get(0), datesNotInDB.get(datesNotInDB.size() - 1));
+                        logMessage = cityName+" "+datesNotInDB.get(0)+" - " + datesNotInDB.get(datesNotInDB.size() - 1)+"API'den alınacak ve DB'ye kaydedilecek.";
+                        rabbitMQLogProducer.produce(new LogData(logMessage, new Date()));
                         datesNotInDB.clear();
                     }
                     else if (aqtAirQualityDao.existsByCtyCityAndDate(allowedCity, dates.get(i+1))) {
                         saveAirQualityAndSetResultDto(allowedCity, aqtAirQualityResultDtoList, DAY,
                                 datesNotInDB.get(0), datesNotInDB.get(datesNotInDB.size() - 1), dateFormat);
                         log.info("{}, {} - {} API'den alınacak ve DB'ye kaydedilecek.", cityName, datesNotInDB.get(0), datesNotInDB.get(datesNotInDB.size() - 1));
+                        logMessage = cityName+" "+datesNotInDB.get(0)+" - " + datesNotInDB.get(datesNotInDB.size() - 1)+"API'den alınacak ve DB'ye kaydedilecek.";
+                        rabbitMQLogProducer.produce(new LogData(logMessage, new Date()));
                         datesNotInDB.clear();
                     }
                 }
                 i++;
             }
         } else {
-            // Todo: add log
+            String logMessage = cityName+" "+startDate.get()+" - " + endDate.get()+"API'den alınacak ve DB'ye kaydedilecek.";
+            log.info("{}, {} - {} API'den alınacak ve DB'ye kaydedilecek.", cityName, startDate.get(), endDate.get());
+            rabbitMQLogProducer.produce(new LogData(logMessage, new Date()));
             saveAirQualityAndSetResultDto(allowedCity, aqtAirQualityResultDtoList, DAY, startDate.get(), endDate.get(), dateFormat);
         }
 
