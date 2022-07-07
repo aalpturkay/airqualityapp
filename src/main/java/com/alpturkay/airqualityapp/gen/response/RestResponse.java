@@ -1,5 +1,6 @@
 package com.alpturkay.airqualityapp.gen.response;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,6 +13,7 @@ import java.util.Date;
 @NoArgsConstructor
 public class RestResponse<T> implements Serializable {
 
+    @JsonUnwrapped
     private T data;
     private Date responseDate;
     private boolean success;
