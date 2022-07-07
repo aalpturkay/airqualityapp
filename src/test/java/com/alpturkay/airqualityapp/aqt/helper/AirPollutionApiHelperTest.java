@@ -25,23 +25,21 @@ public class AirPollutionApiHelperTest {
     @Autowired
     public AirPollutionApiHelper airPollutionApiHelper;
 
-
-
     static BigDecimal lat, lon;
     static Long unixStartDate, unixEndDate;
 
     @BeforeAll
     static void setup(){
+
         lat = new BigDecimal("39.9208");
         lon = new BigDecimal("32.8540");
         unixStartDate = 1621123200L;
         unixEndDate = 1621296000L;
-
-
     }
 
     @Test
     void shouldGetAirPollutionDataWhenReturnAirPollutionServiceResponseDto() {
+
         ReflectionTestUtils.setField(airPollutionApiHelper, "APP_ID", "9af83fb990b72f650afcba613cf44b7d");
         ReflectionTestUtils.setField(airPollutionApiHelper, "URL", "https://api.openweathermap.org/data/2.5/air_pollution/history");
 
