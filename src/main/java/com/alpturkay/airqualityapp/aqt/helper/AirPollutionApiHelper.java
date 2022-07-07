@@ -12,10 +12,10 @@ import java.math.BigDecimal;
 public class AirPollutionApiHelper {
 
     @Value("${weather.api.app.id}")
-    private String APP_ID;
+    public String APP_ID;
 
     @Value("${airpollution.api.url}")
-    private String URL;
+    public String URL;
 
     public AirPollutionServiceResponseDto getAirPollutionData(BigDecimal lat, BigDecimal lon, Long unixStartDate, Long unixEndDate){
 
