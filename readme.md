@@ -10,10 +10,10 @@ You can only query dates from 27-11-2020 to today.
 - Air quality categories: Good, Satisfactory, Moderate, Poor, Severe, Hazardous.
 - Add a city to expand allowed cities.
 - Look at the logs to determine if data comes from the weather API or the Database.
-
+- It sends logs to the log saver micro service using RabbitMQ.
 ## Tech Stack
 
-**Server:** Java, Spring Boot, Postgres, Docker.
+**Server:** Java, Spring Boot, Postgres, Docker, RabbitMQ.
 
 
 ## API Routes
