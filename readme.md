@@ -15,6 +15,8 @@ You can only query dates from 27-11-2020 to today.
 
 **Server:** Java, Spring Boot, Postgres, Docker, RabbitMQ.
 
+## Log Saver Service Repo
+#### https://github.com/aalpturkay/logsaver
 
 ## API Routes
 
