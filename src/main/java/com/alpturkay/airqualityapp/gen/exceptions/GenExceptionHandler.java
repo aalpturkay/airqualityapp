@@ -31,13 +31,32 @@ public class GenExceptionHandler {
         return getResponseEntity(errDate, message, description, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler
+    public ResponseEntity<Object> handleDateNotValidException(DateNotValidException e, WebRequest webRequest){
+        Date errDate = new Date();
+        String message = e.getBaseErrorMessage().getMessage();
+        String description = webRequest.getDescription(false);
+        GenExceptionResponse genExceptionResponse = new GenExceptionResponse(errDate, message, description);
+
+        return new ResponseEntity<>(genExceptionResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<Object> handleCityNotAllowedException(CityNotAllowedException e, WebRequest webRequest){
+        Date errDate = new Date();
+        String message = e.getBaseErrorMessage().getMessage();
+        String description = webRequest.getDescription(false);
+        GenExceptionResponse genExceptionResponse = new GenExceptionResponse(errDate, message, description);
+
+        return new ResponseEntity<>(genExceptionResponse, HttpStatus.BAD_REQUEST);
+    }
+
     private ResponseEntity<Object> getResponseEntity(Date errDate, String message, String description, HttpStatus httpStatus) {
         GenExceptionResponse genExceptionResponse = new GenExceptionResponse(errDate, message, description);
 
         RestResponse<GenExceptionResponse> restResponse = RestResponse.error(genExceptionResponse);
         restResponse.setMessage(message);
 
-        //ResponseEntity<RestResponse<GenExceptionResponse>> response = new ResponseEntity<>(restResponse, HttpStatus.INTERNAL_SERVER_ERROR);
         return new ResponseEntity<>(restResponse, httpStatus);
     }
 }

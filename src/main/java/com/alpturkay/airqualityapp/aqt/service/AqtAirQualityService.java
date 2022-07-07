@@ -9,6 +9,9 @@ import com.alpturkay.airqualityapp.aqt.enums.EnumAqtAirQualityCategoryType;
 import com.alpturkay.airqualityapp.aqt.helper.*;
 import com.alpturkay.airqualityapp.cty.entity.CtyCity;
 import com.alpturkay.airqualityapp.cty.service.CtyCityService;
+import com.alpturkay.airqualityapp.gen.enums.GenErrorMessage;
+import com.alpturkay.airqualityapp.gen.exceptions.CityNotAllowedException;
+import com.alpturkay.airqualityapp.gen.exceptions.DateNotValidException;
 import com.alpturkay.airqualityapp.gen.utils.CustomDateUtil;
 import com.alpturkay.airqualityapp.gen.utils.CustomStringUtil;
 import lombok.RequiredArgsConstructor;
@@ -42,14 +45,15 @@ public class AqtAirQualityService {
         List<AqtAirQualityResultDto> aqtAirQualityResultDtoList = new ArrayList<>();
         aqtAirQualityResponseDto.setCity(allowedCity.getCityName());
 
-        // convert string to date -> iterate over dates -> get pollution data for each date
-
         final int DAY = 24;
         Date start, end;
+
         AtomicReference<String> startDate = new AtomicReference<>();
         AtomicReference<String> endDate = new AtomicReference<>();
+
         Calendar startCal = Calendar.getInstance();
         Calendar endCal = Calendar.getInstance();
+
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
@@ -177,11 +181,10 @@ public class AqtAirQualityService {
         }
     }
 
-    // Todo: make this exception custom.
     private CtyCity getAllowedCityWithControl(String cityName) {
         cityName = CustomStringUtil.lowerAndCapitalizeFirstLetter(cityName);
         if(!ctyCityService.existsByCityName(cityName))
-            throw new RuntimeException("You are not allowed to query for this city.");
+            throw new CityNotAllowedException(GenErrorMessage.CITY_NOT_ALLOWED);
 
         return ctyCityService.findByCityName(cityName);
     }
@@ -189,7 +192,7 @@ public class AqtAirQualityService {
     private void controlDatesBetweenValidDates(String date, String minDate, SimpleDateFormat dateFormat){
         if(CustomDateUtil.isBetweenMinDateAndToday(date, minDate, dateFormat))
             return;
-        throw new RuntimeException("Dates must be between 27-11-2020 and today!");
+        throw new DateNotValidException(GenErrorMessage.DATE_MUST_BE_BETWEEN_RESTRICTIONS);
     }
 
 }
